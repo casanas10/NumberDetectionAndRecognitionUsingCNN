@@ -3,6 +3,7 @@ import os
 
 import final_proj
 
+
 # file paths to images
 
 
@@ -28,7 +29,6 @@ def run():
     # TESTING
 
     pass
-
 
 if __name__ == "__main__":
     run()
