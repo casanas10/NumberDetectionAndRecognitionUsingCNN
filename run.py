@@ -1,202 +1,131 @@
-import cv2
 import os
-import keras
-from keras.utils.np_utils import to_categorical
-from keras.datasets import mnist
-from keras.models import Sequential
-from keras.layers import Dense, Conv2D, MaxPool2D, Flatten, Dropout
-import numpy as np
+import tensorflow as tf
+import tensorflow.contrib.keras as keras
+
+from tensorflow.contrib.keras.api import keras
 import matplotlib.pyplot as plt
+import numpy as np
+import cv2
 
 import final_proj
 
+if __name__ == "__main__":
 
-def run():
+    X_train, y_train, im_set = final_proj.load_dataset(number_of_images=2000)
 
-    # load images and split data set into train, validation, and test
-    X_train, y_train, X_test, y_test = final_proj.load_images_and_split_data()
+    # X_train, mean = final_proj.preprocess_data(X_train)
 
-    print(X_train.shape)
-    print(y_train.shape)
+    # X_train = X_train.reshape(X_train.shape[0], 48, 48, 1)
 
-    #preprocess data
-    num_classes = 10
-    epochs = 10
-
-    input_shape = (32, 32, 3)
+    # cv2.imshow('here', X_train[0])
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
     X_train = X_train.astype('float32')
-    X_test = X_test.astype('float32')
-    #rescale data so between 0 and 1
     X_train /= 255.0
-    X_test /= 255.0
 
-    y_train = keras.utils.to_categorical(y_train, num_classes=num_classes)
-    y_test = to_categorical(y_test, num_classes=num_classes)
+    input_shape = (244, 244, 3)
 
     print(X_train.shape)
-    print(y_train.shape)
 
-    # BUILD the CNN
-    cnn = Sequential()
+    model = keras.models.Sequential()
 
-    cnn.add(Conv2D(32, (3, 3), padding='same', input_shape=input_shape, activation='relu'))
-    cnn.add(Conv2D(32, (3, 3), activation='relu'))
-    cnn.add(MaxPool2D())
-    cnn.add(Dropout(0.25))
+    model.add(keras.layers.Conv2D(64, (3, 3), padding='same', input_shape=input_shape, activation='relu'))
+    model.add(keras.layers.Conv2D(64, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(keras.layers.BatchNormalization())
+    model.add(keras.layers.Dropout(0.25))
 
-    cnn.add(Conv2D(32, (3, 3), padding='same', input_shape=input_shape, activation='relu'))
-    cnn.add(Conv2D(32, (3, 3), activation='relu'))
-    cnn.add(MaxPool2D())
-    cnn.add(Dropout(0.25))
+    model.add(keras.layers.Conv2D(128, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.Conv2D(128, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(keras.layers.BatchNormalization())
+    model.add(keras.layers.Dropout(0.25))
 
-    cnn.add(Flatten()) #we flatten the network because we have a Dense(Fully Connected layer next)
-    cnn.add(Dense(1024, activation='relu'))
-    cnn.add(Dropout(0.5))
-    cnn.add(Dense(10, activation='softmax')) #output layer
+    model.add(keras.layers.Conv2D(256, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.Conv2D(256, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.Conv2D(256, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(keras.layers.BatchNormalization())
+    model.add(keras.layers.Dropout(0.25))
 
-    #compile model
-    cnn.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.add(keras.layers.Conv2D(512, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.Conv2D(512, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.Conv2D(512, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(keras.layers.BatchNormalization())
+    model.add(keras.layers.Dropout(0.25))
 
-    print(cnn.summary())
+    model.add(keras.layers.Conv2D(512, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.Conv2D(512, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.Conv2D(512, (3, 3), padding='same', activation='relu'))
+    model.add(keras.layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(keras.layers.BatchNormalization())
+    model.add(keras.layers.Dropout(0.25))
 
-    history_cnn = cnn.fit(X_train, y_train, epochs=epochs, verbose=1, validation_data=(X_train, y_train))
+    model.add(keras.layers.Flatten())
+    model.add(keras.layers.Dense(4096, activation='relu'))
+    model.add(keras.layers.Dropout(0.35))
+    model.add(keras.layers.Dense(4096, activation='relu'))
+    model.add(keras.layers.Dropout(0.35))
 
-    # Convert labels to categorical one-hot encoding
-    # one_hot_labels = to_categorical(y_train)
+    model.add(keras.layers.Dense(4, activation='linear'))
+
+    # input = keras.layers.Input(shape=(244, 244, 3))
+    # x = keras.layers.Conv2D(32, (3, 3), padding='same', activation='relu')(input)
+    # x = keras.layers.MaxPool2D()(x)
+    # x = keras.layers.BatchNormalization()(x)
+    # x = keras.layers.Dropout(0.25)(x)
     #
-    # history_cnn = cnn.fit(X_train, y_train, epochs)
-
-    print(history_cnn.history['acc'])
-
+    # x = keras.layers.Flatten()(x)
+    # x = keras.layers.Dense(512, activation='relu')(x)
+    # x = keras.layers.BatchNormalization()(x)
+    # x = keras.layers.Dropout(0.50)(x)
     #
-    # plt.plot(history_cnn.history['acc'])
-    # plt.show()
+    # x_bb = keras.layers.Dense(4, name='bb')(x)
+    # # x_class = keras.layers.Dense(10, activation='softmax', name='class')(x)
     #
-    # #you can also load weights from other trained models
-    # # cnn.load_weights('weights/cnn-model5.h5')
+    # model = keras.models.Model([input], [x_bb])
+    model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+    model.summary()
+
+    history_cnn = model.fit(X_train, y_train, epochs=5, verbose=1, validation_data=(X_train, y_train))
+    model.save_weights('model.h5')
+
+    # model.load_weights('model.h5')
+
+    # for i in range(len(X_train)):
+    #     tt = X_train[i]
+    #     #
+    #     cv2.imshow('here', tt)
+    #     cv2.waitKey(0)
+    #     cv2.destroyAllWindows()
+    #     te = np.asarray([tt])
+    #     #
+    #     image_s = im_set[i]
+    #     cv2.imshow('here', image_s)
+    #     cv2.waitKey(0)
+    #     cv2.destroyAllWindows()
+    #     #
+    #     p = model.predict(te)
     #
+    #     print(p[0])
+    #     print(y_train[i])
     #
-    # #evalute model
-    # score = cnn.evaluate(X_test, y_test)
+    #     x_min, x_max, y_min, y_max = final_proj.denormalize_bbox(y_train[i][0], y_train[i][1], y_train[i][2], y_train[i][3], image_s.shape[0], image_s.shape[1])
+    #     #
+    #     # x_min, x_max, y_min, y_max = final_proj.denormalize_bbox(p[0][0], p[0][1], p[0][2], p[0][3], image_s.shape[0], image_s.shape[1])
+    #     # tt *= datagen.std
+    #     # tt += datagen.mean
     #
-    # print(score)
-
-
-    # define hyper parameters
-
-    # TRAINING
-
-    # train model
-
-    # get predictions
-
-    # calculate accuracy of training
-
-    # EVALUATE
-
-    # TESTING
+    #     # x_min, x_max, y_min, y_max = y_train[i][0], y_train[i][1], y_train[i][2], y_train[i][3]
+    #
+    #     # x_min, x_max, y_min, y_max = int(p[0][0]), int(p[0][1]), int(p[0][2]), int(p[0][3])
+    #
+    #     im = final_proj.draw_bbox(tt, x_min, x_max, y_min, y_max)
+    #
+    #     cv2.imshow('here', im)
+    #     cv2.waitKey(0)
+    #     cv2.destroyAllWindows()
 
     pass
-
-
-if __name__ == "__main__":
-    run()
-
-    # (X_train, y_train), (X_test, y_test) = mnist.load_data()
-    #
-    # # print(X_train.shape)
-    # # print(y_train.shape)
-    #
-    # # plt.imshow(X_train[0])
-    # # plt.show()
-    # #
-    # # print(y_train[0])
-    #
-    # #preprocessing
-    # num_classes = 10
-    # epochs = 3
-    #
-    # X_train = X_train.reshape(60000, 28, 28, 1)
-    # X_test = X_test.reshape(10000, 28, 28, 1)
-    # X_train = X_train.astype('float32')
-    # X_test = X_test.astype('float32')
-    # #rescale data so between 0 and 1
-    # X_train /= 255.0
-    # X_test /= 255.0
-    # y_train = to_categorical(y_train, num_classes)
-    # y_test = to_categorical(y_test, num_classes)
-    #
-    # print(X_train.shape)
-    # print(y_train.shape)
-    #
-    # #create and compile the model
-    # cnn = Sequential()
-    # cnn.add(Conv2D(32, kernel_size=(5,5), input_shape=(28, 28, 1), padding='same', activation='relu'))
-    # cnn.add(MaxPool2D())
-    # cnn.add(Conv2D(64, kernel_size=(5,5), padding='same', activation='relu'))
-    # cnn.add(MaxPool2D())
-    # cnn.add(Flatten()) #we flatten the network because we have a Dense(Fully Connected layer next)
-    # cnn.add(Dense(1024, activation='relu'))
-    # cnn.add(Dense(10, activation='softmax')) #output layer
-    #
-    # #compile model
-    # cnn.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    #
-    # print(cnn.summary())
-    #
-    #
-    # #train model
-    # history_cnn = cnn.fit(X_train, y_train, epochs, verbose=1, validation_data=(X_train, y_train))
-    #
-    # plt.plot(history_cnn.history['acc'])
-    # plt.show()
-    #
-    # #you can also load weights from other trained models
-    # # cnn.load_weights('weights/cnn-model5.h5')
-    #
-    #
-    # #evalute model
-    # score = cnn.evaluate(X_test, y_test)
-    #
-    # print(score)
-
-    # import numpy as np
-    # import keras
-    # from keras.models import Sequential
-    # from keras.layers import Dense, Dropout, Flatten
-    # from keras.layers import Conv2D, MaxPooling2D
-    # from keras.optimizers import SGD
-    #
-    # # Generate dummy data
-    # x_train = np.random.random((100, 100, 100, 3))
-    #
-    # y = np.random.randint(10, size=(100, 1))
-    #
-    # y_train = keras.utils.to_categorical(y, num_classes=10)
-    # x_test = np.random.random((20, 100, 100, 3))
-    # y_test = keras.utils.to_categorical(np.random.randint(10, size=(20, 1)), num_classes=10)
-    #
-    # model = Sequential()
-    # # input: 100x100 images with 3 channels -> (100, 100, 3) tensors.
-    # # this applies 32 convolution filters of size 3x3 each.
-    # model.add(Conv2D(32, (3, 3), activation='relu', input_shape=(100, 100, 3)))
-    # model.add(Conv2D(32, (3, 3), activation='relu'))
-    # model.add(MaxPooling2D(pool_size=(2, 2)))
-    # model.add(Dropout(0.25))
-    #
-    # model.add(Conv2D(64, (3, 3), activation='relu'))
-    # model.add(Conv2D(64, (3, 3), activation='relu'))
-    # model.add(MaxPooling2D(pool_size=(2, 2)))
-    # model.add(Dropout(0.25))
-    #
-    # model.add(Flatten())
-    # model.add(Dense(256, activation='relu'))
-    # model.add(Dropout(0.5))
-    # model.add(Dense(10, activation='softmax'))
-    #
-    # sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    # model.compile(loss='categorical_crossentropy', optimizer=sgd)
-    #
-    # model.fit(x_train, y_train, batch_size=32, epochs=10)
-    # score = model.evaluate(x_test, y_test, batch_size=32)
