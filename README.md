@@ -25,7 +25,7 @@ You can find my report here. https://github.com/casanas10/NumberDetectionAndReco
 * compared different plots 
 
 
-##Running File
+## Running File
 - first download weights for the CNN models https://drive.google.com/open?id=1-CzrTm7OJpY_WdYyc_SaltTnv5L4Bp9r
 
 python run_project.py
@@ -38,7 +38,7 @@ If you would like to run a video. Uncomment the video processing funtion.
 Put the video inside the input_videos directory and update name of the video in the run_project file.
 Run the script again. 
 
-##Directories:
+## Directories:
 graded_images folder has the 5 images for the report
 
 TA_Testing_Folder used to input the images you want to analyze
@@ -49,6 +49,6 @@ output folder is where video will be after processing
 
 weights folder contains all the weights of each model
 
-##Links:
+## Links:
 Video link: https://youtu.be/4h1WYyUv6G8
 
